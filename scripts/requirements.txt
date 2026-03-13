@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+mailchimp_marketing
+python-dotenv
+requests
+python-multipart
