@@ -7,6 +7,8 @@ description: A complete skill for integrating AI agents with Mailchimp to draft,
 
 This skill allows an AI agent to accept an email draft context, dynamically generate a Mailchimp campaign, send an interactive approval request to a messaging platform, and reliably schedule the campaign based on user consent.
 
+> **VPS/Hostinger Users:** For a completely automated, interactive setup guide that doesn't require any coding, please read the [README.md](./README.md) file!
+
 ## Motivation & Architecture
 AI agents often need to draft emails but shouldn't be trusted to blindly blast thousands of subscribers without human review. This integration acts as a "Gatekeeper Tool" for your AI:
 1. The AI hits this tool's `/submit-draft` webhook with a proposed `subject`, `body`, and `send_time`. 
@@ -19,8 +21,10 @@ AI agents often need to draft emails but shouldn't be trusted to blindly blast t
 - `scripts/requirements.txt` - Python dependencies needed to run the server.
 - `examples/test_payload.json` - Example JSON describing the shape of the LLM tool call payload.
 - `examples/.env.example` - Template for necessary environment variables.
+- `deploy/install.sh` - Automated VPS/Hostinger deployment script.
+- `deploy/update.sh` - Auto-updater cron script.
 
-## Deployment & Setup Instructions
+## Manual Deployment & Setup Instructions
 
 ### 1. Configure the Environment
 Copy `examples/.env.example` to `scripts/.env` and fill in the Mailchimp credentials:
@@ -40,7 +44,7 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
-*Note for VPS/Cloud deployment (e.g., Hostinger): Ensure your firewall rules open the port used (default 8000).*
+*Note for VPS/Cloud deployment: Ensure your firewall rules open the port used (default 8000).*
 
 ## Exposing as an Agent Tool (OpenClaw / MCP / GPTs)
 Because this is built in FastAPI, it automatically hosts an OpenAPI specification at `http://localhost:8000/openapi.json` (or wherever you deploy it). 
