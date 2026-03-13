@@ -42,7 +42,7 @@ We've created an automated installer that does 99% of the work for you.
 Once you are logged into the black server screen, copy and paste this command to download the integration:
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/openclaw-mailchimp.git
+git clone https://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@github.com/DAS-XR-Labs/openclaw-mailchimp.git
 cd openclaw-mailchimp
 ```
 
