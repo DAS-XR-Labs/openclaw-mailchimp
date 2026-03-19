@@ -26,13 +26,13 @@ This is a **Native OpenClaw JavaScript Skill** that handles email blasts via nat
 
 Because this is a native OpenClaw plugin, it runs entirely within your OpenClaw Node.js process. 
 
-### Step 1: Install the Skill
-If you are running OpenClaw locally, via a Hostinger VPS Node engine, or via Docker, simply navigate to your OpenClaw plugin/skill manager and run:
+### Step 1: Install the Skill via Chat
+Since the integration runs transparently as a native extension inside your pre-existing environment, you do not need SSH access to the server!
 
-```bash
-npm install git+https://github.com/DAS-XR-Labs/openclaw-mailchimp.git
-```
-*(Or simply clone this repository directly into your OpenClaw `skills/` directory)*
+1. Open your **OpenClaw Chat Interface**.
+2. Send the following command to securely download and install this skill straight from GitHub:
+
+> *"/install git+https://github.com/DAS-XR-Labs/openclaw-mailchimp.git"*
 
 ### Step 2: Configure your Agent 🪄
 
