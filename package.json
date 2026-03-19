@@ -1,0 +1,27 @@
+{
+  "name": "openclaw-mailchimp",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">   <img src=\"https://raw.githubusercontent.com/mergisi/openclaw/main/docs/public/logo.png\" width=\"100\"/>   <h1>Mailchimp Integration for OpenClaw</h1>   <p><h3>The Gatekeeper for AI Email Campaigns</h3></p>   <p>Allow your OpenClaw AI Assistant to draft, schedule, and request interactive human approval for Mailchimp campaigns directly from your phone!</p> </div>",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DAS-XR-Labs/openclaw-mailchimp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DAS-XR-Labs/openclaw-mailchimp/issues"
+  },
+  "homepage": "https://github.com/DAS-XR-Labs/openclaw-mailchimp#readme",
+  "dependencies": {
+    "@mailchimp/mailchimp_marketing": "^3.0.80",
+    "dotenv": "^17.3.1"
+  }
+}

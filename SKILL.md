@@ -1,51 +1,33 @@
 ---
 name: OpenClaw Mailchimp Integration
-description: A complete skill for integrating AI agents with Mailchimp to draft, approve, and schedule email campaigns without requiring user logins.
+description: A native Javascript OpenClaw skill for integrating AI agents with Mailchimp to draft, preview, approve, and send email campaigns conversationally.
+version: 1.0.0
+main: "src/index.js"
 ---
 
-# OpenClaw Mailchimp Integration Skill
+# Mailchimp Conversation Integration
 
-This skill allows an AI agent to accept an email draft context, dynamically generate a Mailchimp campaign, send an interactive approval request to a messaging platform, and reliably schedule the campaign based on user consent.
+This skill empowers an OpenClaw AI agent to naturally manage a user's Mailchimp email blasts through multi-turn conversational chat.
 
-> **VPS/Hostinger Users:** For a completely automated, interactive setup guide that doesn't require any coding, please read the [README.md](./README.md) file!
+## Native Tools Exposed
+This module exports three Javascript methods natively exposed to the LLM:
 
-## Motivation & Architecture
-AI agents often need to draft emails but shouldn't be trusted to blindly blast thousands of subscribers without human review. This integration acts as a "Gatekeeper Tool" for your AI:
-1. The AI hits this tool's `/submit-draft` webhook with a proposed `subject`, `body`, and `send_time`. 
-2. The tool builds the exact email in Mailchimp but **does not send it**.
-3. It immediately fires an interactive "Approve/Reject" popup to the user's phone (via Slack, Telegram, WhatsApp, etc.).
-4. When the user taps "Approve", the tool finalizes the schedule in Mailchimp. The user never logs into Mailchimp.
+1. `createDraft(subject: string, body: string, sendTime: string)`
+   - Used when the user requests a new email blast to be drafted.
+   - It outputs the drafted `campaignId` and an interactive `previewUrl` directly into the chat buffer.
+   - **Agent Instruction:** When calling this tool, ALWAYS provide the `previewUrl` to the user in chat and immediately ask if they would like to send the campaign or delete it.
 
-## Directory Structure
-- `scripts/main.py` - The core FastAPI webhook server. 
-- `scripts/requirements.txt` - Python dependencies needed to run the server.
-- `examples/test_payload.json` - Example JSON describing the shape of the LLM tool call payload.
-- `examples/.env.example` - Template for necessary environment variables.
-- `deploy/install.sh` - Automated VPS/Hostinger deployment script.
-- `deploy/update.sh` - Auto-updater cron script.
+2. `sendCampaign(campaignId: string)`
+   - Used ONLY after the user explicitly types "Send it", "Approve", or confirms the draft.
+   - Instantly schedules the campaign for sending utilizing Mailchimp's transactional APIs.
 
-## Manual Deployment & Setup Instructions
+3. `deleteCampaign(campaignId: string)`
+4. `configureMailchimp(apiKey: string, serverPrefix: string, audienceId: string)`
+   - Used when the user first installs the skill or if the `createDraft` tool throws an error saying credentials are missing.
+   - Saves the credentials permanently into the agent's safe `.env` file.
 
-### 1. Configure the Environment
-Copy `examples/.env.example` to `scripts/.env` and fill in the Mailchimp credentials:
-- `MAILCHIMP_API_KEY`: Found in Mailchimp Account -> Extras -> API Keys
-- `MAILCHIMP_SERVER_PREFIX`: The end of your API key (e.g., `us14`)
-- `MAILCHIMP_AUDIENCE_ID`: Found in Mailchimp Audience -> Settings
+## 🚀 Onboarding Instructions for the Agent
+When you (the AI) run this skill, you must first check if you have the Mailchimp keys. If you try to run `createDraft` and it returns an error about missing credentials, you MUST say to the user:
+> *"It looks like this is your first time using the Mailchimp skill! To set it up, could you provide your Mailchimp API Key, the Server Prefix (like `us14`), and your Audience ID?"*
 
-### 2. Install Dependencies
-Navigate into `scripts/` and run:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 3. Run the Server
-```bash
-python main.py
-```
-*Note for VPS/Cloud deployment: Ensure your firewall rules open the port used (default 8000).*
-
-## Exposing as an Agent Tool (OpenClaw / MCP / GPTs)
-Because this is built in FastAPI, it automatically hosts an OpenAPI specification at `http://localhost:8000/openapi.json` (or wherever you deploy it). 
-You can pass this URL directly to any AI agent framework (including the OpenClaw plugin system) that supports OpenAPI schemas to instantly register the Mailchimp scheduling capabilities as a tool for your Chat LLM.
+Once the user provides them, immediately call the `configureMailchimp` tool to safely store them.
