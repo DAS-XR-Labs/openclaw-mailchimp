@@ -132,9 +132,53 @@ async function configureMailchimp(apiKey, serverPrefix, audienceId) {
     return { status: `Success! Mailchimp is now securely configured and saved to .env for all future sessions.` };
 }
 
+/**
+ * Checks GitHub for a newer version of this Mailchimp OpenClaw skill.
+ * @returns {Promise<{status: string, message: string}>}
+ */
+async function checkForUpdates() {
+    try {
+        const pkgPath = require('path').resolve(__dirname, '../package.json');
+        const localPkg = require(pkgPath);
+        const localVersion = localPkg.version || '1.0.0';
+
+        const remoteUrl = 'https://raw.githubusercontent.com/DAS-XR-Labs/openclaw-mailchimp/main/package.json';
+        const patToken = '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';
+
+        // dynamic import of node-fetch or native fetch in newer node versions
+        const fetchCmd = typeof fetch !== 'undefined' ? fetch : (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+        
+        const res = await fetchCmd(remoteUrl, {
+            headers: {
+                'Authorization': `token ${patToken}`,
+                'Accept': 'application/vnd.github.v3.raw'
+            }
+        });
+
+        if (!res.ok) {
+            return { status: "Error", message: `Failed to fetch remote version. GitHub responded with status: ${res.status}` };
+        }
+
+        const remotePkg = await res.json();
+        const remoteVersion = remotePkg.version;
+
+        if (localVersion !== remoteVersion) {
+            return {
+                status: "Update Available!",
+                message: `You are running version v${localVersion}, but v${remoteVersion} is available. Tell the user to run the installation command: "/install git+https://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@github.com/DAS-XR-Labs/openclaw-mailchimp.git" to automatically upgrade.`
+            };
+        }
+
+        return { status: "Up to date", message: `You are running the latest version (v${localVersion}).` };
+    } catch (e) {
+        return { status: "Error", message: `Failed to check for updates: ${e.message}` };
+    }
+}
+
 module.exports = {
     createDraft,
     sendCampaign,
     deleteCampaign,
-    configureMailchimp
+    configureMailchimp,
+    checkForUpdates
 };

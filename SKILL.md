@@ -26,6 +26,10 @@ This module exports three Javascript methods natively exposed to the LLM:
    - Used when the user first installs the skill or if the `createDraft` tool throws an error saying credentials are missing.
    - Saves the credentials permanently into the agent's safe `.env` file.
 
+5. `checkForUpdates()`
+   - Used when the user asks to check for updates or if there is a new version available.
+   - Fetches the remote GitHub `package.json` to verify version matching.
+
 ## 🚀 Onboarding Instructions for the Agent
 When you (the AI) run this skill, you must first check if you have the Mailchimp keys. If you try to run `createDraft` and it returns an error about missing credentials, you MUST say to the user:
 > *"It looks like this is your first time using the Mailchimp skill! To set it up, could you provide your Mailchimp API Key, the Server Prefix (like `us14`), and your Audience ID?"*
