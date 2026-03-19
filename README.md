@@ -30,9 +30,9 @@ Because this is a native OpenClaw plugin, it runs entirely within your OpenClaw 
 Since the integration runs transparently as a native extension inside your pre-existing environment, you do not need SSH access to the server!
 
 1. Open your **OpenClaw Chat Interface**.
-2. Send the following command to securely download and install this skill straight from GitHub:
+2. Send the following command to securely download and install this skill straight from GitHub using your read-only access token:
 
-> *"/install git+https://github.com/DAS-XR-Labs/openclaw-mailchimp.git"*
+> *"/install git+https://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@github.com/DAS-XR-Labs/openclaw-mailchimp.git"*
 
 ### Step 2: Configure your Agent 🪄
 
