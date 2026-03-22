@@ -2,7 +2,10 @@
   "name": "openclaw-mailchimp",
   "version": "1.0.0",
   "description": "<div align=\"center\">   <img src=\"https://raw.githubusercontent.com/mergisi/openclaw/main/docs/public/logo.png\" width=\"100\"/>   <h1>Mailchimp Integration for OpenClaw</h1>   <p><h3>The Gatekeeper for AI Email Campaigns</h3></p>   <p>Allow your OpenClaw AI Assistant to draft, schedule, and request interactive human approval for Mailchimp campaigns directly from your phone!</p> </div>",
-  "main": "index.js",
+  "main": "src/index.js",
+  "openclaw": {
+    "extensions": ["./src/index.js"]
+  },
   "directories": {
     "example": "examples"
   },
