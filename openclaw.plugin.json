@@ -1,0 +1,21 @@
+{
+  "id": "openclaw-mailchimp",
+  "name": "Mailchimp",
+  "description": "Draft, preview, approve, and send Mailchimp email campaigns through conversational chat",
+  "version": "1.0.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string"
+      },
+      "serverPrefix": {
+        "type": "string"
+      },
+      "audienceId": {
+        "type": "string"
+      }
+    }
+  }
+}
