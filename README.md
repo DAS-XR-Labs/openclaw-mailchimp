@@ -32,12 +32,10 @@ You don't need direct SSH access to your VPS! If you are chatting with OpenClaw 
 1. Open your **OpenClaw Chat Interface**.
 2. Send the following exact message to tell OpenClaw to clone the integration into its skills folder:
 
-> *Please run the following commands in your terminal to clone and install the open-source Mailchimp integration:*
+> *Please run the following command in your terminal to clone the open-source Mailchimp integration into your skills directory:*
 > 
 > ```bash
 > git clone https://github.com/DAS-XR-Labs/openclaw-mailchimp.git ~/.openclaw/workspace/skills/openclaw-mailchimp
-> openclaw plugins install ~/.openclaw/workspace/skills/openclaw-mailchimp
-> openclaw gateway restart
 > ```
 
 ### Step 2: Configure your Agent 🪄
