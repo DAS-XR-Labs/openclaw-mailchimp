@@ -1,182 +1,150 @@
-require('dotenv').config();
-const mailchimp = require('@mailchimp/mailchimp_marketing');
-
-const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY;
-const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX;
-const MAILCHIMP_AUDIENCE_ID = process.env.MAILCHIMP_AUDIENCE_ID;
-
-if (MAILCHIMP_API_KEY && MAILCHIMP_SERVER_PREFIX) {
-    mailchimp.setConfig({
-        apiKey: MAILCHIMP_API_KEY,
-        server: MAILCHIMP_SERVER_PREFIX,
-    });
-}
+const mailchimp = require("@mailchimp/mailchimp_marketing");
 
 /**
- * Creates a regular email campaign draft in Mailchimp and returns the preview URL.
- * @param {string} subject - The subject line of the email.
- * @param {string} body - The HTML body of the email.
- * @param {string} sendTime - A human-readable note from the user determining when this should send.
- * @returns {Promise<{campaignId: string, previewUrl: string, message: string}>}
+ * OpenClaw plugin: Mailchimp campaign management.
+ * Credentials come from openclaw.yaml → plugins.entries.openclaw-mailchimp.
  */
-async function createDraft(subject, body, sendTime) {
-    if (!process.env.MAILCHIMP_API_KEY || !process.env.MAILCHIMP_SERVER_PREFIX || !process.env.MAILCHIMP_AUDIENCE_ID) {
-        throw new Error("Mailchimp credentials are missing from the configuration. Please run the configureMailchimp tool first!");
-    }
 
-    try {
-        // 1. Create the Campaign metadata
-        const response = await mailchimp.campaigns.create({
-            type: "regular",
-            recipients: {
-                list_id: process.env.MAILCHIMP_AUDIENCE_ID
-            },
-            settings: {
-                subject_line: subject,
-                title: `OpenClaw Draft: ${subject}`,
-                from_name: "OpenClaw Agent",
-                reply_to: "openclaw@example.com"
+function initClient(pluginConfig) {
+  const apiKey = pluginConfig?.apiKey;
+  const server = pluginConfig?.serverPrefix;
+  if (!apiKey || !server) {
+    throw new Error(
+      "Mailchimp credentials not configured. Please execute conversational onboarding!"
+    );
+  }
+  mailchimp.setConfig({ apiKey, server });
+  return pluginConfig;
+}
+
+function createDraftTool(pluginConfig) {
+  return {
+    name: "mailchimp_create_draft",
+    description:
+      "Create a Mailchimp email campaign draft. Returns the campaign ID and preview URL. Always show the preview URL to the user and ask for approval before sending.",
+    parameters: {
+      type: "object",
+      properties: {
+        subject: { type: "string", description: "The subject line of the email campaign." },
+        body: { type: "string", description: "The HTML body content of the email." },
+        sendTime: { type: "string", description: "When this should be sent." },
+      },
+      required: ["subject", "body"],
+    },
+    async execute(_id, params) {
+      const cfg = initClient(pluginConfig);
+      const audienceId = cfg.audienceId;
+      if (!audienceId) throw new Error("Mailchimp audienceId not configured.");
+
+      const subject = params.subject;
+      const body = params.body;
+      const sendTime = params.sendTime || "not specified";
+
+      const response = await mailchimp.campaigns.create({
+        type: "regular",
+        recipients: { list_id: audienceId },
+        settings: {
+          subject_line: subject,
+          title: `OpenClaw Draft: ${subject}`,
+          from_name: "OpenClaw Agent",
+          reply_to: "noreply@example.com",
+        },
+      });
+
+      const campaignId = response.id;
+      const previewUrl =
+        response.archive_url ||
+        response.long_archive_url ||
+        `https://${cfg.serverPrefix}.admin.mailchimp.com/campaigns/show/?id=${campaignId}`;
+
+      await mailchimp.campaigns.setContent(campaignId, {
+        html: `<p>${body}</p><br><p><em>Scheduled intent: ${sendTime}</em></p>`,
+      });
+
+      return {
+        content: [{ type: "text", text: JSON.stringify({ campaignId, previewUrl, message: "Draft created successfully." }, null, 2) }],
+      };
+    },
+  };
+}
+
+function createSendTool(pluginConfig) {
+  return {
+    name: "mailchimp_send_campaign",
+    description: "Send an existing Mailchimp campaign immediately. Only call this after the user has explicitly approved the draft.",
+    parameters: {
+      type: "object",
+      properties: { campaignId: { type: "string", description: "The Mailchimp campaign ID to send." } },
+      required: ["campaignId"],
+    },
+    async execute(_id, params) {
+      initClient(pluginConfig);
+      await mailchimp.campaigns.send(params.campaignId);
+      return { content: [{ type: "text", text: `{"status": "Campaign ${params.campaignId} has been approved and sent."}` }] };
+    },
+  };
+}
+
+function createDeleteTool(pluginConfig) {
+  return {
+    name: "mailchimp_delete_campaign",
+    description: "Delete (reject) an existing Mailchimp campaign draft.",
+    parameters: {
+      type: "object",
+      properties: { campaignId: { type: "string", description: "The Mailchimp campaign ID to delete." } },
+      required: ["campaignId"],
+    },
+    async execute(_id, params) {
+      initClient(pluginConfig);
+      await mailchimp.campaigns.remove(params.campaignId);
+      return { content: [{ type: "text", text: `{"status": "Campaign ${params.campaignId} has been rejected and deleted."}` }] };
+    },
+  };
+}
+
+function createUpdateTool() {
+  return {
+    name: "mailchimp_check_for_updates",
+    description: "Check GitHub to see if a newer version of the Mailchimp plugin is available.",
+    parameters: { type: "object", properties: {}, required: [] },
+    async execute() {
+        try {
+            const pkgPath = require('path').resolve(__dirname, '../package.json');
+            const localPkg = require(pkgPath);
+            const localVersion = localPkg.version || '1.0.0';
+
+            const remoteUrl = 'https://raw.githubusercontent.com/DAS-XR-Labs/openclaw-mailchimp/main/package.json';
+            const fetchCmd = typeof fetch !== 'undefined' ? fetch : (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+            
+            const res = await fetchCmd(remoteUrl, { headers: { 'Accept': 'application/vnd.github.v3.raw' }});
+            if (!res.ok) return { content: [{ type: "text", text: `{"error": "Failed to fetch remote version. Status: ${res.status}"}` }] };
+
+            const remotePkg = await res.json();
+            const remoteVersion = remotePkg.version;
+
+            if (localVersion !== remoteVersion) {
+                return { content: [{ type: "text", text: `Update Available! You run v${localVersion}, but v${remoteVersion} is available. Tell the user to run: "cd ~/.openclaw/workspace/skills/openclaw-mailchimp && git pull origin main && openclaw gateway restart" to upgrade.` }] };
             }
-        });
-
-        const campaignId = response.id;
-        const previewUrl = response.archive_url || response.long_archive_url || `https://${process.env.MAILCHIMP_SERVER_PREFIX}.admin.mailchimp.com/campaigns/show/?id=${campaignId}`;
-
-        // 2. Set the HTML content
-        await mailchimp.campaigns.setContent(campaignId, {
-            html: `<p>${body}</p><br><p><em>Scheduled intent: ${sendTime}</em></p>`
-        });
-
-        return {
-            campaignId,
-            previewUrl,
-            message: "Successfully drafted the campaign in Mailchimp."
-        };
-    } catch (error) {
-        console.error("Mailchimp API Error:", error.response ? error.response.body : error);
-        throw new Error(`Failed to create draft: ${error.message}`);
-    }
-}
-
-/**
- * Approves and sends an existing Mailchimp campaign immediately.
- * @param {string} campaignId - The ID of the campaign to send.
- * @returns {Promise<{status: string}>}
- */
-async function sendCampaign(campaignId) {
-    try {
-        await mailchimp.campaigns.send(campaignId);
-        return { status: `Success! Campaign ${campaignId} has been securely approved and sent.` };
-    } catch (error) {
-        throw new Error(`Failed to send campaign ${campaignId}: ${error.message}`);
-    }
-}
-
-/**
- * Rejects and deletes an existing Mailchimp campaign draft to keep the account clean.
- * @param {string} campaignId - The ID of the campaign to delete.
- * @returns {Promise<{status: string}>}
- */
-async function deleteCampaign(campaignId) {
-    try {
-        await mailchimp.campaigns.remove(campaignId);
-        return { status: `Success! Campaign ${campaignId} has been rejected and permanently deleted.` };
-    } catch (error) {
-        throw new Error(`Failed to delete campaign ${campaignId}: ${error.message}`);
-    }
-}
-
-/**
- * Saves Mailchimp credentials to the root .env file so they persist for future agent sessions. 
- * This should be called by the AI after asking the user for their keys if they are currently unconfigured.
- * @param {string} apiKey - The user's full Mailchimp API Key.
- * @param {string} serverPrefix - The suffix of the Mailchimp API Key (e.g., 'us14').
- * @param {string} audienceId - The unique Mailchimp Audience ID for the email blast.
- * @returns {Promise<{status: string}>}
- */
-async function configureMailchimp(apiKey, serverPrefix, audienceId) {
-    const fs = require('fs');
-    const path = require('path');
-    const envPath = path.resolve(process.cwd(), '.env');
-    
-    // Read existing .env if it exists
-    let envData = '';
-    if (fs.existsSync(envPath)) {
-        envData = fs.readFileSync(envPath, 'utf8');
-    }
-
-    // Replace or append keys
-    const updateEnv = (key, value) => {
-        const regex = new RegExp(`^${key}=.*$`, 'm');
-        if (regex.test(envData)) {
-            envData = envData.replace(regex, `${key}="${value}"`);
-        } else {
-            envData += `\n${key}="${value}"`;
+            return { content: [{ type: "text", text: `You are running the latest version (v${localVersion}).` }] };
+        } catch (e) {
+            return { content: [{ type: "text", text: `{"error": "Failed to check for updates: ${e.message}"}` }] };
         }
-    };
-
-    updateEnv('MAILCHIMP_API_KEY', apiKey);
-    updateEnv('MAILCHIMP_SERVER_PREFIX', serverPrefix);
-    updateEnv('MAILCHIMP_AUDIENCE_ID', audienceId);
-
-    // Save back to .env
-    fs.writeFileSync(envPath, envData.replace(/^\s*[\r\n]/gm, ''));
-    
-    // Dynamically apply to runtime
-    process.env.MAILCHIMP_API_KEY = apiKey;
-    process.env.MAILCHIMP_SERVER_PREFIX = serverPrefix;
-    process.env.MAILCHIMP_AUDIENCE_ID = audienceId;
-    
-    mailchimp.setConfig({ apiKey, server: serverPrefix });
-
-    return { status: `Success! Mailchimp is now securely configured and saved to .env for all future sessions.` };
-}
-
-/**
- * Checks GitHub for a newer version of this Mailchimp OpenClaw skill.
- * @returns {Promise<{status: string, message: string}>}
- */
-async function checkForUpdates() {
-    try {
-        const pkgPath = require('path').resolve(__dirname, '../package.json');
-        const localPkg = require(pkgPath);
-        const localVersion = localPkg.version || '1.0.0';
-
-        const remoteUrl = 'https://raw.githubusercontent.com/DAS-XR-Labs/openclaw-mailchimp/main/package.json';
-
-        // dynamic import of node-fetch or native fetch in newer node versions
-        const fetchCmd = typeof fetch !== 'undefined' ? fetch : (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-        
-        const res = await fetchCmd(remoteUrl, {
-            headers: {
-                'Accept': 'application/vnd.github.v3.raw'
-            }
-        });
-
-        if (!res.ok) {
-            return { status: "Error", message: `Failed to fetch remote version. GitHub responded with status: ${res.status}` };
-        }
-
-        const remotePkg = await res.json();
-        const remoteVersion = remotePkg.version;
-
-        if (localVersion !== remoteVersion) {
-            return {
-                status: "Update Available!",
-                message: `You are running version v${localVersion}, but v${remoteVersion} is available. Tell the user to instruct you (the AI) to run: "cd ~/.openclaw/workspace/skills/openclaw-mailchimp && git pull origin main && openclaw gateway restart" to automatically upgrade.`
-            };
-        }
-
-        return { status: "Up to date", message: `You are running the latest version (v${localVersion}).` };
-    } catch (e) {
-        return { status: "Error", message: `Failed to check for updates: ${e.message}` };
     }
+  };
 }
 
 module.exports = {
-    createDraft,
-    sendCampaign,
-    deleteCampaign,
-    configureMailchimp,
-    checkForUpdates
+  id: "openclaw-mailchimp",
+  name: "Mailchimp",
+  description: "Draft, preview, approve, and send Mailchimp email campaigns through chat",
+  version: "1.0.1",
+
+  register(api) {
+    const pluginConfig = api.pluginConfig || {};
+    api.registerTool(createDraftTool(pluginConfig), { name: "mailchimp_create_draft" });
+    api.registerTool(createSendTool(pluginConfig), { name: "mailchimp_send_campaign" });
+    api.registerTool(createDeleteTool(pluginConfig), { name: "mailchimp_delete_campaign" });
+    api.registerTool(createUpdateTool(), { name: "mailchimp_check_for_updates" });
+    api.logger.info("Mailchimp plugin registered (4 tools)");
+  },
 };

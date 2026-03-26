@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/mergisi/openclaw/main/docs/public/logo.png" width="100"/>
   <h1>Mailchimp Integration for OpenClaw</h1>
   <p><h3>The Conversational Email Gatekeeper</h3></p>
-  <p>Allow your OpenClaw AI Assistant to draft, preview, and request conversational human approval for Mailchimp campaigns locally inside your AI without an external server!</p>
+  <p>Allow your OpenClaw AI Assistant to draft, preview, and request conversational human approval for Mailchimp campaigns directly from your AI Gateway!</p>
 </div>
 
 <hr/>
@@ -11,12 +11,12 @@
 
 AI agents shouldn't be blindly trusted to blast thousands of subscribers without a human double-checking the email first. 
 
-This is a **Native OpenClaw JavaScript Skill** that handles email blasts via natural chat flows:
+This is a **Native OpenClaw Plugin** that registers into your OpenClaw Gateway to handle email blasts securely via natural chat flows:
 1. You tell OpenClaw: *"Draft an email about our summer sale."*
-2. OpenClaw calls the Mailchimp API recursively in the background, drafting it securely on your account.
-3. OpenClaw replies in chat: *"It's drafted! Here is the Preview Link: `[URL]`. Would you like me to send it, rewrite it, or delete it?"*
-4. You click the preview link, read it, and reply: *"Looks great, send it!"*
-5. OpenClaw instantly sends it. 
+2. OpenClaw calls the Mailchimp API seamlessly, drafting it on your account.
+3. OpenClaw provides the Preview Link straight into the chat and asks: *"Would you like me to send it, rewrite it, or delete it?"*
+4. You click the preview link, confirm it's correct, and reply: *"Send it!"*
+5. OpenClaw instantly dispatches it. 
 
 **Zero Webhooks, Zero OpenAPI configurations, Zero External Servers!**
 
@@ -24,29 +24,30 @@ This is a **Native OpenClaw JavaScript Skill** that handles email blasts via nat
 
 ## 🛠️ Installation Guide
 
-Because this is a native OpenClaw plugin, it runs entirely within your OpenClaw Node.js process. 
+Because this is a native OpenClaw module, you can install and configure it entirely through conversation with your AI! The AI has internal workspace terminal access to install it on your behalf.
 
-### Step 1: Install the Skill via Chat
-You don't need direct SSH access to your VPS! If you are chatting with OpenClaw (Clawboss), the assistant has the ability to run terminal commands inside its own workspace.
-
+### Step 1: Install the Plugin via Chat
 1. Open your **OpenClaw Chat Interface**.
-2. Send the following exact message to tell OpenClaw to clone the integration into its skills folder:
+2. Send the following exact message to instruct the AI to clone and structurally register the Mailchimp plugin directly into its gateway:
 
-> *Please run the following command in your terminal to clone the open-source Mailchimp integration into your skills directory:*
+> *Please run the following commands in your workspace terminal to successfully clone and register the open-source Mailchimp architecture into your execution Gateway:*
 > 
 > ```bash
 > git clone https://github.com/DAS-XR-Labs/openclaw-mailchimp.git ~/.openclaw/workspace/skills/openclaw-mailchimp
+> openclaw plugins install ~/.openclaw/workspace/skills/openclaw-mailchimp
+> openclaw gateway restart
 > ```
 
-### Step 2: Configure your Agent 🪄
+### Step 2: Auto-Configure your Settings 🪄
+You don't need to manually edit any `openclaw.yaml` files! 
+Once the Gateway restarts from the previous step, just send this exact command to your AI:
 
-You don't need to manually edit any files! Just open your **OpenClaw Chat Interface** and send this exact command so your AI reads the configuration:
+> *"Please review the local `SKILL.md` inside your newly installed Mailchimp plugin workspace directory."*
 
-> *"Please review the local `SKILL.md` in the Mailchimp plugin we just installed."*
+Because of the plugin's aggressive conversational onboarding instructions, the AI will instantly realize it needs your API Keys and will natively reply: 
 
-Your AI will instantly realize it needs your configuration credentials and will natively reply: 
-> *"It looks like this is your first time using the Mailchimp skill! To set it up, could you provide your Mailchimp API Key, the Server Prefix (like `us14`), and your Audience ID?"*
+> *"It looks like this is your first time using the Mailchimp plugin! To securely configure it directly within the Gateway, please provide your Mailchimp API Key, your Server Prefix (e.g. `us14`), and your Audience ID."*
 
-Just paste your info into the chat! The AI will securely configure itself natively using OpenClaw's internal systems and permanently save the keys for all future sessions!
+Just paste your info into the chat! The AI will natively execute the required `openclaw config set` variables securely into its own internal systems and permanently save the keys for all future sessions!
 
-**Boom!** 💥 Your OpenClaw Agent is now an email marketer. Test it by saying: *"Test the Mailchimp tool by drafting an email about our new summer sale and return my preview link!"*
+**Boom!** 💥 Your OpenClaw Gateway is now an email marketer. Test it by saying: *"Test the Mailchimp plugin by drafting an email about our new summer sale and return my preview link!"*
