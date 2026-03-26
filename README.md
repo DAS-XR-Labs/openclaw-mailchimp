@@ -32,22 +32,25 @@ You don't need direct SSH access to your VPS! If you are chatting with OpenClaw 
 1. Open your **OpenClaw Chat Interface**.
 2. Send the following exact message to tell OpenClaw to clone the integration into its skills folder:
 
-> *Please run the following command in your terminal to clone the open-source Mailchimp integration into your skills directory:*
+> *Please run the following commands in your terminal to clone and install the open-source Mailchimp integration:*
 > 
 > ```bash
 > git clone https://github.com/DAS-XR-Labs/openclaw-mailchimp.git ~/.openclaw/workspace/skills/openclaw-mailchimp
+> openclaw plugins install ~/.openclaw/workspace/skills/openclaw-mailchimp
+> openclaw gateway restart
 > ```
-> *Once it is cloned, please run `openclaw gateway restart` to apply it.*
 
-### Step 2: Configure your Agent 🪄
+### Step 2: Configure your Keys 🪄
 
-You don't need to manually edit any files! Just open your **OpenClaw Chat Interface** and send this exact command so your AI reads the configuration:
+Before using the tool, you must configure your OpenClaw Gateway to securely provide the credentials. Open your `openclaw.yaml` configuration file and add the following entry to your plugins block:
 
-> *"Please review the local `SKILL.md` for the internal Mailchimp plugin we just installed."*
-
-Your AI will instantly realize it needs your configuration credentials and will reply: 
-> *"It looks like this is your first time using the Mailchimp skill! To set it up, could you provide your Mailchimp API Key, the Server Prefix (like `us14`), and your Audience ID?"*
-
-Just paste your info into the chat, and the AI will securely configure itself and save the keys for all future sessions!
+```yaml
+plugins:
+  entries:
+    openclaw-mailchimp:
+      apiKey: "your-api-key-here"
+      serverPrefix: "us14" # The string at the end of your apiKey
+      audienceId: "your-audience-id"
+```
 
 **Boom!** 💥 Your OpenClaw Agent is now an email marketer. Test it by saying: *"Test the Mailchimp tool by drafting an email about our new summer sale and return my preview link!"*
