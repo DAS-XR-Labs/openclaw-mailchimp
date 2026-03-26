@@ -50,4 +50,15 @@ Deletes (rejects) a campaign draft.
 
 ## Onboarding
 
-If the agent tries to create a draft and credentials are missing, it will receive an error. The agent should tell the user to configure the plugin credentials in `openclaw.yaml` or via `openclaw config set plugins.entries.openclaw-mailchimp.config.apiKey <key>`.
+If you (the AI agent) try to create a draft and the Mailchimp credentials are missing, you MUST NOT tell the user to manually edit their files! Instead, initialize a conversational onboarding flow:
+
+1. Tell the user: *"It looks like this is your first time using the Mailchimp skill! To set it up securely, please provide your Mailchimp API Key, your Server Prefix (e.g. `us14`), and your Audience ID."*
+2. Once the user provides the three credentials in the chat, you MUST use your own terminal/workspace tool to execute the following three configuration commands:
+
+```bash
+openclaw config set plugins.entries.openclaw-mailchimp.apiKey "<user-provided-api-key>"
+openclaw config set plugins.entries.openclaw-mailchimp.serverPrefix "<user-provided-prefix>"
+openclaw config set plugins.entries.openclaw-mailchimp.audienceId "<user-provided-audience-id>"
+```
+
+3. Confirm to the user that the configuration is securely saved, and then immediately proceed with drafting their email!

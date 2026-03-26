@@ -40,17 +40,15 @@ You don't need direct SSH access to your VPS! If you are chatting with OpenClaw 
 > openclaw gateway restart
 > ```
 
-### Step 2: Configure your Keys 🪄
+### Step 2: Configure your Agent 🪄
 
-Before using the tool, you must configure your OpenClaw Gateway to securely provide the credentials. Open your `openclaw.yaml` configuration file and add the following entry to your plugins block:
+You don't need to manually edit any files! Just open your **OpenClaw Chat Interface** and send this exact command so your AI reads the configuration:
 
-```yaml
-plugins:
-  entries:
-    openclaw-mailchimp:
-      apiKey: "your-api-key-here"
-      serverPrefix: "us14" # The string at the end of your apiKey
-      audienceId: "your-audience-id"
-```
+> *"Please review the local `SKILL.md` in the Mailchimp plugin we just installed."*
+
+Your AI will instantly realize it needs your configuration credentials and will natively reply: 
+> *"It looks like this is your first time using the Mailchimp skill! To set it up, could you provide your Mailchimp API Key, the Server Prefix (like `us14`), and your Audience ID?"*
+
+Just paste your info into the chat! The AI will securely configure itself natively using OpenClaw's internal systems and permanently save the keys for all future sessions!
 
 **Boom!** 💥 Your OpenClaw Agent is now an email marketer. Test it by saying: *"Test the Mailchimp tool by drafting an email about our new summer sale and return my preview link!"*
