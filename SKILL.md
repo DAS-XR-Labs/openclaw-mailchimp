@@ -1,64 +1,40 @@
 ---
 name: OpenClaw Mailchimp Integration
-description: An OpenClaw plugin for managing Mailchimp email campaigns through conversational chat.
-version: 1.0.1
+description: A native Javascript OpenClaw skill for integrating AI agents with Mailchimp to draft, preview, approve, and send email campaigns conversationally.
+version: 1.0.0
 main: "src/index.js"
 ---
 
-# Mailchimp Campaign Management
+# Mailchimp Conversation Integration
 
-This plugin lets an OpenClaw agent draft, preview, approve, and send Mailchimp email campaigns through natural conversation.
+This skill empowers an OpenClaw AI agent to naturally manage a user's Mailchimp email blasts through multi-turn conversational chat.
 
-## Configuration
+## Native Tools Exposed
+This module exports five Javascript methods natively exposed to the LLM:
 
-Add Mailchimp credentials to `openclaw.yaml`:
+1. `createDraft(subject: string, body: string, sendTime: string)`
+   - Used when the user requests a new email blast to be drafted.
+   - It outputs the drafted `campaignId` and an interactive `previewUrl` directly into the chat buffer.
+   - **Agent Instruction:** When calling this tool, ALWAYS provide the `previewUrl` to the user in chat and immediately ask if they would like to send the campaign or delete it.
 
-```yaml
-plugins:
-  entries:
-    openclaw-mailchimp:
-      enabled: true
-      config:
-        apiKey: "your-mailchimp-api-key"
-        serverPrefix: "us14"
-        audienceId: "your-audience-id"
-```
+2. `sendCampaign(campaignId: string)`
+   - Used ONLY after the user explicitly types "Send it", "Approve", or confirms the draft.
+   - Instantly schedules the campaign for sending utilizing Mailchimp's transactional APIs.
 
-## Tools
+3. `deleteCampaign(campaignId: string)`
+   - Used when the user dislikes the draft, requests a rewrite, or explicitly types "Delete it" or "Reject".
+   - Cleans up Mailchimp by permanently trashing the unwanted draft.
 
-### `mailchimp_create_draft`
-Creates a campaign draft in Mailchimp and returns the campaign ID and preview URL.
+4. `configureMailchimp(apiKey: string, serverPrefix: string, audienceId: string)`
+   - Used when the user first installs the skill or if the `createDraft` tool throws an error saying credentials are missing.
+   - Saves the credentials permanently into the agent's safe `.env` file.
 
-**Parameters:**
-- `subject` (string, required) — Email subject line
-- `body` (string, required) — HTML body content
-- `sendTime` (string, optional) — When the user wants it sent (e.g. "tomorrow morning")
+5. `checkForUpdates()`
+   - Used when the user asks to check for updates or if there is a new version available.
+   - Fetches the remote GitHub `package.json` to verify version matching.
 
-**Agent instruction:** Always show the `previewUrl` to the user and ask whether to send or delete the draft.
+## 🚀 Onboarding Instructions for the Agent
+When you (the AI) run this skill, you must first check if you have the Mailchimp keys. If you try to run `createDraft` and it returns an error about missing credentials, you MUST say to the user:
+> *"It looks like this is your first time using the Mailchimp skill! To set it up, could you provide your Mailchimp API Key, the Server Prefix (like `us14`), and your Audience ID?"*
 
-### `mailchimp_send_campaign`
-Sends an existing campaign immediately. Only call after explicit user approval.
-
-**Parameters:**
-- `campaignId` (string, required) — The campaign ID from `mailchimp_create_draft`
-
-### `mailchimp_delete_campaign`
-Deletes (rejects) a campaign draft.
-
-**Parameters:**
-- `campaignId` (string, required) — The campaign ID to delete
-
-## Onboarding
-
-If you (the AI agent) try to create a draft and the Mailchimp credentials are missing, you MUST NOT tell the user to manually edit their files! Instead, initialize a conversational onboarding flow:
-
-1. Tell the user: *"It looks like this is your first time using the Mailchimp skill! To set it up securely, please provide your Mailchimp API Key, your Server Prefix (e.g. `us14`), and your Audience ID."*
-2. Once the user provides the three credentials in the chat, you MUST use your own terminal/workspace tool to execute the following three configuration commands:
-
-```bash
-openclaw config set plugins.entries.openclaw-mailchimp.apiKey "<user-provided-api-key>"
-openclaw config set plugins.entries.openclaw-mailchimp.serverPrefix "<user-provided-prefix>"
-openclaw config set plugins.entries.openclaw-mailchimp.audienceId "<user-provided-audience-id>"
-```
-
-3. Confirm to the user that the configuration is securely saved, and then immediately proceed with drafting their email!
+Once the user provides them, immediately call the `configureMailchimp` tool to safely store them.
